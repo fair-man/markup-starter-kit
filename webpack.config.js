@@ -5,6 +5,11 @@ const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const CleanWebpackPlugin = require('clean-webpack-plugin');
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
+const CopyWebpackPlugin = require('copy-webpack-plugin');
+const ImageminPlugin = require('imagemin-webpack-plugin').default;
+
+let projectPathSrc = path.resolve(__dirname, "src");
+let projectPathBuild = path.resolve(__dirname, "dist");
 
 let pathsToClean = [
   'dist'
@@ -22,7 +27,7 @@ let config = {
     main: './src/main'
   },
   output: {
-    path: path.join(__dirname, 'dist'),
+    path: projectPathBuild,
     filename: '[name].[hash].js',
     library: '[name]'
   },
@@ -31,7 +36,7 @@ let config = {
       {
         use: ['babel-loader'],
         include: [
-          path.resolve(__dirname, "src"),
+          projectPathSrc
         ],
         test: /\.js$/
       }
@@ -49,12 +54,11 @@ module.exports = (env, argv) => {
 
   config.plugins = [
     new CleanWebpackPlugin(pathsToClean, cleanOptions),
-    new webpack.DefinePlugin({
-      MODE: JSON.stringify(MODE)
-    }),
-    new HtmlWebpackPlugin({
-      template: path.join(__dirname, '/src/index.html')
-    }),
+    new webpack.DefinePlugin({MODE: JSON.stringify(MODE)}),
+    new HtmlWebpackPlugin({template: path.join(__dirname, '/src/index.html')}),
+    new ImageminPlugin({ test: projectPathSrc + '/images/' + /\.(jpe?g|png|gif|svg)$/i }),
+    new CopyWebpackPlugin([{ from: projectPathSrc + '/fonts', to: projectPathBuild + '/fonts' }]),
+    new CopyWebpackPlugin([{from: projectPathSrc + '/images', to: projectPathBuild + '/images'}]),
     new MiniCssExtractPlugin({
       filename: MODE === 'development' ? '[name].css' : '[name].[hash].css',
       chunkFilename: MODE === 'development' ? '[id].css' : '[id].[hash].css',
